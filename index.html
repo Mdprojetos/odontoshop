@@ -648,10 +648,15 @@ footer a:hover{color:var(--red)}
 
     const countUp = (el, to, dec) => {
       const o = {v:0};
-      anime({targets:o, v:to, duration:1600, easing:'easeOutExpo', update:() => { el.textContent = o.v.toFixed(dec).replace('.', ','); }});
+      anime({targets:o, v:to, duration:1600, easing:'easeOutExpo', update:() => { el.textContent = o.v.toFixed(dec).replace('.', ','); }, complete:() => { el.textContent = to.toFixed(dec).replace('.', ','); }});
     };
     const onceVisible = (el, fn) => new IntersectionObserver(([en], obs) => { if (en.isIntersecting) { obs.disconnect(); fn(); } }, {threshold:.6}).observe(el);
-    document.querySelectorAll('[data-count]').forEach(el => onceVisible(el, () => countUp(el, +el.dataset.count, +(el.dataset.dec || 0))));
+    // números começam em zero e contam assim que aparecem (inclusive no rodapé da tela do celular)
+    document.querySelectorAll('[data-count]').forEach(el => {
+      const dec = +(el.dataset.dec || 0);
+      el.textContent = (0).toFixed(dec).replace('.', ',');
+      new IntersectionObserver(([en], obs) => { if (en.isIntersecting) { obs.disconnect(); countUp(el, +el.dataset.count, dec); } }, {threshold:.1}).observe(el);
+    });
     document.querySelectorAll('.stars').forEach(s => onceVisible(s, () => anime({targets:s.querySelectorAll('svg'), scale:[0, 1], rotate:['-30deg', '0deg'], delay:anime.stagger(90), duration:900, easing:'easeOutBack'})));
 
     onceVisible(cmp, () => {
